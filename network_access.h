@@ -5,6 +5,8 @@
 #include <QNetworkReply>
 #include <QObject>
 
+using namespace std;
+
 class network_access : public QObject
 {
     Q_OBJECT
