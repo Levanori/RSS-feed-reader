@@ -17,6 +17,8 @@ private slots:
     void replyFinished(QNetworkReply *reply);
 private:
     QNetworkAccessManager *manager;
+signals:
+    void newsSend(QString category, QString title, QString date, QString description);
 };
 
 #endif // NETWORK_ACCESS_H

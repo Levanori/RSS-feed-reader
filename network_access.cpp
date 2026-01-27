@@ -74,7 +74,7 @@ void network_access::replyFinished(QNetworkReply *reply)
                     imageUrl = currentPart.sliced(start_url, end_url - start_url);
                 }
             }
-
+            emit newsSend(category, title, date, description);
             qDebug() << "Категорія:" << category;
             qDebug() << "Заголовок:" << title;
             qDebug() << "Дата:     " << date;

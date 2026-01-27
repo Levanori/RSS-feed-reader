@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTableWidgetItem>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -16,7 +17,8 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
+private slots:
+    void newsReceived(QString category, QString title, QString date, QString description);
 private:
     Ui::MainWindow *ui;
 };
