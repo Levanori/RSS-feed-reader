@@ -24,28 +24,87 @@
     </item>
     <item>
      <widget class="QTableWidget" name="NewsTextTable">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="editTriggers">
        <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
       </property>
       <property name="selectionBehavior">
        <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
       </property>
-      <property name="columnCount">
-       <number>4</number>
+      <property name="gridStyle">
+       <enum>Qt::PenStyle::NoPen</enum>
       </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+      <property name="columnCount">
+       <number>6</number>
+      </property>
+      <attribute name="horizontalHeaderCascadingSectionResizes">
+       <bool>false</bool>
+      </attribute>
       <attribute name="horizontalHeaderMinimumSectionSize">
-       <number>20</number>
+       <number>70</number>
       </attribute>
       <attribute name="horizontalHeaderDefaultSectionSize">
-       <number>300</number>
+       <number>70</number>
       </attribute>
-      <attribute name="horizontalHeaderStretchLastSection">
+      <attribute name="horizontalHeaderHighlightSections">
        <bool>true</bool>
       </attribute>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
+      <attribute name="horizontalHeaderStretchLastSection">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="verticalHeaderVisible">
+       <bool>true</bool>
+      </attribute>
+      <attribute name="verticalHeaderCascadingSectionResizes">
+       <bool>true</bool>
+      </attribute>
+      <attribute name="verticalHeaderMinimumSectionSize">
+       <number>14</number>
+      </attribute>
+      <attribute name="verticalHeaderDefaultSectionSize">
+       <number>120</number>
+      </attribute>
+      <attribute name="verticalHeaderHighlightSections">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="verticalHeaderStretchLastSection">
+       <bool>false</bool>
+      </attribute>
+      <column>
+       <property name="text">
+        <string>Час</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Категорія</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Заголовок</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Опис</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Фото</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Посилання</string>
+       </property>
+      </column>
      </widget>
     </item>
    </layout>

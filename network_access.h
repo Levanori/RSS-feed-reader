@@ -13,12 +13,14 @@ class network_access : public QObject
 public:
     explicit network_access(QObject *parent = nullptr);
     void getRSS();
+    void downloadImage(QString url);
 private slots:
     void replyFinished(QNetworkReply *reply);
 private:
     QNetworkAccessManager *manager;
 signals:
-    void newsSend(QString category, QString title, QString date, QString description);
+    void newsSend(QString category, QString title, QString date, QString description, QString link, QString imageUrl);
+    void imageDownloaded(QByteArray data, QString url);
 };
 
 #endif // NETWORK_ACCESS_H
