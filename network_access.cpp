@@ -7,9 +7,9 @@ network_access::network_access(QObject *parent)
     connect(manager, &QNetworkAccessManager::finished, this, &network_access::replyFinished);
 }
 
-void network_access::getRSS()
+void network_access::getRSS(QString url)
 {
-    manager->get(QNetworkRequest(QUrl("http://unian.ua/rss")));
+    manager->get(QNetworkRequest(QUrl(url)));
 }
 
 void network_access::downloadImage(QString url)

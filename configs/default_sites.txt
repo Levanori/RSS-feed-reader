@@ -1,0 +1,3 @@
+Уніан;http://unian.ua/rss
+ТСН;https://tsn.ua/rss
+Економічна Правда;https://www.epravda.com.ua/rss

@@ -11,13 +11,17 @@ MainWindow::MainWindow(QWidget *parent)
     this->showMaximized();
 
     net = new network_access(this);
-    net->getRSS();
 
     connect(net, &network_access::newsSend, this, &MainWindow::newsReceived);
     connect(ui->NewsTextTable, &QTableWidget::itemDoubleClicked, this, &MainWindow::openLink);
     connect(net, &network_access::imageDownloaded, this, &MainWindow::imagePlace);
+    connect(ui->pushButtonAddRSS, &QPushButton::clicked, this, &MainWindow::addSiteByUser);
+    connect(ui->treeWidgetOfRSS, &QTreeWidget::itemClicked, this, &MainWindow::treeRSSClicked);
 
     ui->NewsTextTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->treeWidgetOfRSS->hideColumn(1);
+
+    loadSites();
 }
 
 MainWindow::~MainWindow()
@@ -60,5 +64,60 @@ void MainWindow::imagePlace(QByteArray data, QString url) {
         imageMap[url]->setPixmap(photo);
     }
     imageMap.remove(url);
+}
+
+void MainWindow::addSiteByUser() {
+    QString name = ui->lineEditNameOfSite->text();
+    QString url = ui->lineEditUrl->text();
+
+    if (!name.isEmpty() && !url.isEmpty()) {
+        QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidgetOfRSS);
+        item->setText(0, name);
+        item->setText(1, url);
+
+        QFile fileOfSites("user_sites.txt");
+        if (fileOfSites.open(QIODevice::Append | QIODevice::Text)) { // opportuniry to continue writing text
+            fileOfSites.write(name.toUtf8() + ";" + url.toUtf8() + "\n");
+            fileOfSites.close();
+            qDebug() << "Збережено";}
+
+        ui->lineEditNameOfSite->clear();
+        ui->lineEditUrl->clear();
+    }
+}
+
+void MainWindow::loadSites() {
+    readAndAddToTree(":/configs/default_sites.txt");
+    readAndAddToTree("user_sites.txt");
+}
+
+void MainWindow::readAndAddToTree(QString fileName) {
+    QFile file(fileName);
+    if (file.open(QIODevice::ReadOnly)) {
+        QByteArray data = file.readAll();
+        file.close();
+
+        QString allNamesAndUrs = QString::fromUtf8(data);
+        QStringList listOfNamesAndUrs = allNamesAndUrs.split('\n');
+
+        for (int index = 0; index < listOfNamesAndUrs.size(); index++) {
+            QString nameAndUrs = listOfNamesAndUrs[index].replace("\r", "");
+            if (nameAndUrs.size()) {
+                QStringList partsOfNameAndURL = nameAndUrs.split(';');
+                if (partsOfNameAndURL.size() == 2) {
+                    QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidgetOfRSS);
+                    item->setText(0, partsOfNameAndURL[0]);
+                    item->setText(1, partsOfNameAndURL[1]);
+                }
+            }
+        }
+    }
+}
+
+void MainWindow::treeRSSClicked(QTreeWidgetItem *item) {
+    QString url = item->text(1);
+    ui->NewsTextTable->setRowCount(0);
+    imageMap.clear();
+    net->getRSS(url);
 }
 
