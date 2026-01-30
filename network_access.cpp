@@ -7,12 +7,7 @@ network_access::network_access(QObject *parent)
     connect(manager, &QNetworkAccessManager::finished, this, &network_access::replyFinished);
 }
 
-void network_access::getRSS(QString url)
-{
-    manager->get(QNetworkRequest(QUrl(url)));
-}
-
-void network_access::downloadImage(QString url)
+void network_access::getDataFromInternet(QString url)
 {
     manager->get(QNetworkRequest(QUrl(url)));
 }
@@ -21,13 +16,17 @@ void network_access::replyFinished(QNetworkReply *reply)
 {
     if (reply->error() == QNetworkReply::NoError) {
         QByteArray data = reply->readAll();
-        QString url = reply->url().toString();
-        if (url.contains(".jpg") || url.contains(".png") || url.contains(".jpeg") || url.contains("image")) {
+        QString url = reply->request().url().toString();
+
+
+        QString contentType = reply->header(QNetworkRequest::ContentTypeHeader).toString(); // searching by type performed much better than by ending
+
+        if (contentType.startsWith("image/") || url.endsWith(".webp")) {
             emit imageDownloaded(data, url);
         }
         else {
             QString readable_data = QString::fromUtf8(data);
-            // qDebug() << "Дані є:" << readable_data;
+            qDebug() << "Дані є:" << readable_data;
 
             QStringList parts = readable_data.split("<item>");
 
@@ -46,11 +45,45 @@ void network_access::replyFinished(QNetworkReply *reply)
 
                 int start_date = currentPart.indexOf("<pubDate>") + 9;
                 int end_date = currentPart.indexOf("</pubDate>");
+                if (start_date == -1 && end_date == -1){
+                    start_date = currentPart.indexOf("<lastBuildDate>") + 15;
+                    end_date = currentPart.indexOf("</lastBuildDate>");
+                }
 
                 int start_category   = currentPart.indexOf("<category>") + 10;
                 int end_category   = currentPart.indexOf("</category>");
 
-                int start_enclosure   = currentPart.indexOf("<enclosure"); // image
+                int start_image = currentPart.indexOf("<enclosure");
+                if (start_image == -1){
+                    start_image = currentPart.indexOf("<media:thumbnail");
+                }
+
+                if (start_image != -1) {
+                    int start_url = currentPart.indexOf("url=\"", start_image);
+                    if (start_url != -1) {
+                        start_url += 5;
+                        int end_url = currentPart.indexOf("\"", start_url);
+                        imageUrl = currentPart.sliced(start_url, end_url - start_url);
+                    }
+                }
+
+                if (imageUrl.isEmpty()) { // upd: figure out how to clean up the copy-paste
+                    int start_src = currentPart.indexOf("src='");
+                    if (start_src != -1) {
+                        start_src += 5;
+                        int end_src = currentPart.indexOf("'", start_src);
+                        imageUrl = currentPart.sliced(start_src, end_src - start_src);
+                    }
+                }
+
+                if (imageUrl.isEmpty()) {
+                    int start_src = currentPart.indexOf("src=\"");
+                    if (start_src != -1) {
+                        start_src += 5;
+                        int end_url = currentPart.indexOf("\"", start_src);
+                        imageUrl = currentPart.sliced(start_src, end_url - start_src);
+                    }
+                }
 
                 if (start_title != -1 && end_title != -1) { // receiving the text of something provided that it is found
                     title = currentPart.sliced(start_title, end_title - start_title);
@@ -74,23 +107,14 @@ void network_access::replyFinished(QNetworkReply *reply)
                     category = currentPart.sliced(start_category, end_category - start_category);
                 }
 
-                if (start_enclosure != -1) {
-                    int start_url = currentPart.indexOf("url=\"", start_enclosure);
-                    int end_enclosure = currentPart.indexOf("/>", start_enclosure);
-
-                    if (start_url != -1 && end_enclosure != -1) {
-                        start_url += 5;
-                        int end_url = currentPart.indexOf("\"", start_url);
-                        imageUrl = currentPart.sliced(start_url, end_url - start_url);
-                    }
-                }
+                imageUrl = QUrl::fromEncoded(imageUrl.toUtf8()).toString(); // to avoid any errors with data (%)
                 emit newsSend(category, title, date, description, link, imageUrl);
-                // qDebug() << "Категорія:" << category;
-                // qDebug() << "Заголовок:" << title;
-                // qDebug() << "Дата:     " << date;
-                // qDebug() << "Опис:     " << description;
-                // qDebug() << "Фото:     " << imageUrl;
-                // qDebug() << "Лінк:     " << link;
+                qDebug() << "Категорія:" << category;
+                qDebug() << "Заголовок:" << title;
+                qDebug() << "Дата:     " << date;
+                qDebug() << "Опис:     " << description;
+                qDebug() << "Фото:     " << imageUrl;
+                qDebug() << "Лінк:     " << link;
             }
         }
     } else {

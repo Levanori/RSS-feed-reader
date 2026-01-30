@@ -46,8 +46,8 @@ void MainWindow::newsReceived(QString category, QString title, QString date, QSt
     ui->NewsTextTable->setItem(row, 5, new QTableWidgetItem(link));
 
     if (!imageUrl.isEmpty()) {
-        imageMap[imageUrl] = imageLabel;
-        net->downloadImage(imageUrl);
+        imageMap.insert(imageUrl, imageLabel);
+        net->getDataFromInternet(imageUrl);
     }
 }
 
@@ -58,12 +58,18 @@ void MainWindow::openLink(QTableWidgetItem *item)
 }
 
 void MainWindow::imagePlace(QByteArray data, QString url) {
-    if(imageMap.contains(url)) {
-        QPixmap photo;
-        photo.loadFromData(data);
-        imageMap[url]->setPixmap(photo);
+    QPixmap photo;
+    if (photo.loadFromData(data)) {
+        while (imageMap.contains(url)) {
+            QLabel *labelForPhoto = imageMap.value(url);
+            if (labelForPhoto) {
+                labelForPhoto->setPixmap(photo);
+            }
+            imageMap.remove(url, labelForPhoto);
+        }
+    } else {
+        imageMap.remove(url);
     }
-    imageMap.remove(url);
 }
 
 void MainWindow::addSiteByUser() {
@@ -79,7 +85,8 @@ void MainWindow::addSiteByUser() {
         if (fileOfSites.open(QIODevice::Append | QIODevice::Text)) { // opportuniry to continue writing text
             fileOfSites.write(name.toUtf8() + ";" + url.toUtf8() + "\n");
             fileOfSites.close();
-            qDebug() << "Збережено";}
+            // qDebug() << "Збережено";
+        }
 
         ui->lineEditNameOfSite->clear();
         ui->lineEditUrl->clear();
@@ -118,6 +125,6 @@ void MainWindow::treeRSSClicked(QTreeWidgetItem *item) {
     QString url = item->text(1);
     ui->NewsTextTable->setRowCount(0);
     imageMap.clear();
-    net->getRSS(url);
+    net->getDataFromInternet(url);
 }
 

@@ -12,8 +12,7 @@ class network_access : public QObject
     Q_OBJECT
 public:
     explicit network_access(QObject *parent = nullptr);
-    void getRSS(QString url);
-    void downloadImage(QString url);
+    void getDataFromInternet(QString url);
 private slots:
     void replyFinished(QNetworkReply *reply);
 private:

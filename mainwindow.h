@@ -30,7 +30,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     network_access *net;
-    QMap<QString, QLabel*> imageMap; // link to the photo and a specific label for the photo location
+    QMultiMap<QString, QLabel*> imageMap; // link to the photo and a specific label for the photo location
     void loadSites();
     void readAndAddToTree(QString fileName);
 };
