@@ -47,7 +47,7 @@ bool rss_storage::addRssToTree(QString folder, QString name, QString url) {
         QTreeWidgetItem *topItem = rssTree->topLevelItem(indexOfItem);
         bool errorDuplicate = 0;
 
-        if (topItem->text(1) == url || topItem->text(0) == name) {
+        if (topItem->text(1) == url || (!topItem->text(1).isEmpty() && topItem->text(0) == name)) {
             errorDuplicate = 1;
         }
         for (int indexItemInFolder = 0; indexItemInFolder < topItem->childCount(); indexItemInFolder++) {
@@ -88,8 +88,7 @@ bool rss_storage::addRssToTree(QString folder, QString name, QString url) {
     return 1;
 }
 
-void rss_storage::saveAllSites(QString fileName)
-{
+void rss_storage::saveAllSites(QString fileName) {
     QFile fileOfSites(fileName);
     if (fileOfSites.open(QIODevice::WriteOnly | QIODevice::Text)) {
         for (int indexItem = 0; indexItem < rssTree->topLevelItemCount(); indexItem++) {
@@ -113,4 +112,59 @@ void rss_storage::saveAllSites(QString fileName)
         }
         fileOfSites.close();
     }
+}
+
+bool rss_storage::deleteRss(QString folder, QString name, QString url) {
+    for (int indexOfItem = 0; indexOfItem < rssTree->topLevelItemCount(); indexOfItem++) {
+        QTreeWidgetItem *topItem = rssTree->topLevelItem(indexOfItem);
+
+        if (!folder.isEmpty() && name.isEmpty() && url.isEmpty()) {
+            if (topItem->text(0) == folder && topItem->childCount() > 0) {
+                delete topItem;
+                saveAllSites("user_sites.txt");
+                return 1;
+            }
+        }
+
+        if (folder.isEmpty() && !name.isEmpty() && url.isEmpty()) { // upd: if sb have time, remove the the copy-paste
+            for (int indexItemInFolder = 0; indexItemInFolder < topItem->childCount(); indexItemInFolder++) {
+                if (topItem->child(indexItemInFolder)->text(0) == name) {
+                    QTreeWidgetItem *parentFolder = topItem;
+
+                    delete topItem->child(indexItemInFolder);
+                    if (parentFolder->childCount() == 0) {
+                        delete parentFolder;
+                    }
+                    saveAllSites("user_sites.txt");
+                    return 1;
+                }
+            }
+            if (!topItem->text(1).isEmpty() && topItem->text(0) == name) {
+                delete topItem;
+                saveAllSites("user_sites.txt");
+                return 1;
+            }
+        }
+
+        if (folder.isEmpty() && name.isEmpty() && !url.isEmpty()) {
+            for (int indexItemInFolder = 0; indexItemInFolder < topItem->childCount(); indexItemInFolder++) {
+                if (topItem->child(indexItemInFolder)->text(1) == url) {
+                    QTreeWidgetItem *parentFolder = topItem;
+
+                    delete topItem->child(indexItemInFolder);
+                    if (parentFolder->childCount() == 0){
+                        delete parentFolder;
+                    }
+                    saveAllSites("user_sites.txt");
+                    return 1;
+                }
+            }
+            if (topItem->text(1) == url) {
+                delete topItem;
+                saveAllSites("user_sites.txt");
+                return 1;
+            }
+        }
+    }
+    return 0;
 }

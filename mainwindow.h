@@ -27,6 +27,7 @@ private slots:
     void imagePlace(QByteArray data, QString url);
     void addSiteByUser();
     void treeRSSClicked(QTreeWidgetItem *item);
+    void deleteSiteByUser();
 private:
     Ui::MainWindow *ui;
     network_access *net;

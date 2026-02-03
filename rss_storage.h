@@ -13,6 +13,7 @@ public:
     void loadSites();
     bool addRssToTree(QString folder, QString name, QString url);
     void saveAllSites(QString fileName);
+    bool deleteRss(QString folder, QString name, QString url);
 private:
     QTreeWidget *rssTree;
     void loadTheTree(QString fileName);

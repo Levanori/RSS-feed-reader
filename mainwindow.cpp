@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(net, &network_access::imageDownloaded, this, &MainWindow::imagePlace);
     connect(ui->pushButtonAddRSS, &QPushButton::clicked, this, &MainWindow::addSiteByUser);
     connect(ui->treeWidgetOfRSS, &QTreeWidget::itemClicked, this, &MainWindow::treeRSSClicked);
+    connect(ui->pushButtonDeleteRSS, &QPushButton::clicked, this, &MainWindow::deleteSiteByUser);
 
     ui->NewsTextTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->treeWidgetOfRSS->hideColumn(1);
@@ -80,6 +81,17 @@ void MainWindow::addSiteByUser() {
     QString name = ui->lineEditNameOfSite->text();
     QString url = ui->lineEditUrl->text();
 
+    int count = 0;
+    if (!name.isEmpty()) {
+        count++;
+    }
+    if (!url.isEmpty()) {
+        count++;
+    }
+    if (count <= 1) {
+        QMessageBox::warning(this, "Warning", "Введіть хоча б назву сайту та URL для додавання");
+        return;
+    }
     if (rssStorage->addRssToTree(folder, name, url)) {
         rssStorage->saveAllSites("user_sites.txt");
         // qDebug() << "Збережено";
@@ -105,4 +117,37 @@ void MainWindow::treeRSSClicked(QTreeWidgetItem *item) {
     else {
         net->getDataFromInternet(url);
     }
+}
+
+void MainWindow::deleteSiteByUser() {
+    QString folder = ui->lineEditFolder->text();
+    QString name = ui->lineEditNameOfSite->text();
+    QString url = ui->lineEditUrl->text();
+
+    int count = 0;
+    if (!folder.isEmpty()) {
+        count++;
+    }
+    if (!name.isEmpty()) {
+        count++;
+    }
+    if (!url.isEmpty()) {
+        count++;
+    }
+    if (count == 0) {
+        QMessageBox::warning(this, "Warning", "Введіть тільки назву папки, або сайту, або URL для видалення");
+        return;
+    }
+    if (count > 1) {
+        QMessageBox::warning(this, "Warning", "Заповніть лише одне поле");
+        return;
+    }
+    if (!rssStorage->deleteRss(folder, name, url)) {
+        QMessageBox::warning(this, "Warning", "Нічого не знайдено за запитом");
+    }
+
+    ui->lineEditFolder->clear();
+    ui->lineEditNameOfSite->clear();
+    ui->lineEditUrl->clear();
+    ui->NewsTextTable->setRowCount(0);
 }
