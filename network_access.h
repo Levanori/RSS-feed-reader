@@ -17,6 +17,7 @@ private slots:
     void replyFinished(QNetworkReply *reply);
 private:
     QNetworkAccessManager *manager;
+    QString cleanHtml(QString html);
 signals:
     void newsSend(QString category, QString title, QString date, QString description, QString link, QString imageUrl);
     void imageDownloaded(QByteArray data, QString url);

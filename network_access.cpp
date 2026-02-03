@@ -18,7 +18,6 @@ void network_access::replyFinished(QNetworkReply *reply)
         QByteArray data = reply->readAll();
         QString url = reply->request().url().toString();
 
-
         QString contentType = reply->header(QNetworkRequest::ContentTypeHeader).toString(); // searching by type performed much better than by ending
 
         if (contentType.startsWith("image/") || url.endsWith(".webp")) {
@@ -36,12 +35,25 @@ void network_access::replyFinished(QNetworkReply *reply)
 
                 int start_title = currentPart.indexOf("<title>") + 7;
                 int end_title = currentPart.indexOf("</title>");
+                if (start_title != -1 && end_title != -1) { // receiving the text of something provided that it is found
+                    title = cleanHtml(currentPart.sliced(start_title, end_title - start_title));
+                }
 
                 int start_description  = currentPart.indexOf("<description>") + 13;
                 int end_description  = currentPart.indexOf("</description>");
+                if (start_description != -1 && end_description != -1) {
+                    description = cleanHtml(currentPart.sliced(start_description, end_description - start_description));
+                    int postIndex = description.indexOf("The post ");
+                    if (postIndex != -1) {
+                        description = description.left(postIndex);
+                    }
+                }
 
                 int start_link = currentPart.indexOf("<link>") + 6;
                 int end_link = currentPart.indexOf("</link>");
+                if (start_link != -1 && end_link != -1) {
+                    link = cleanHtml(currentPart.sliced(start_link, end_link - start_link));
+                }
 
                 int start_date = currentPart.indexOf("<pubDate>") + 9;
                 int end_date = currentPart.indexOf("</pubDate>");
@@ -49,62 +61,47 @@ void network_access::replyFinished(QNetworkReply *reply)
                     start_date = currentPart.indexOf("<lastBuildDate>") + 15;
                     end_date = currentPart.indexOf("</lastBuildDate>");
                 }
-
-                int start_category   = currentPart.indexOf("<category>") + 10;
-                int end_category   = currentPart.indexOf("</category>");
-
-                int start_image = currentPart.indexOf("<enclosure");
-                if (start_image == -1){
-                    start_image = currentPart.indexOf("<media:thumbnail");
-                }
-
-                if (start_image != -1) {
-                    int start_url = currentPart.indexOf("url=\"", start_image);
-                    if (start_url != -1) {
-                        start_url += 5;
-                        int end_url = currentPart.indexOf("\"", start_url);
-                        imageUrl = currentPart.sliced(start_url, end_url - start_url);
-                    }
-                }
-
-                if (imageUrl.isEmpty()) { // upd: figure out how to clean up the copy-paste
-                    int start_src = currentPart.indexOf("src='");
-                    if (start_src != -1) {
-                        start_src += 5;
-                        int end_src = currentPart.indexOf("'", start_src);
-                        imageUrl = currentPart.sliced(start_src, end_src - start_src);
-                    }
-                }
-
-                if (imageUrl.isEmpty()) {
-                    int start_src = currentPart.indexOf("src=\"");
-                    if (start_src != -1) {
-                        start_src += 5;
-                        int end_url = currentPart.indexOf("\"", start_src);
-                        imageUrl = currentPart.sliced(start_src, end_url - start_src);
-                    }
-                }
-
-                if (start_title != -1 && end_title != -1) { // receiving the text of something provided that it is found
-                    title = currentPart.sliced(start_title, end_title - start_title);
-                    title = title.replace("<![CDATA[","").replace("\"","").replace("]]>","");
-                }
-
-                if (start_description != -1 && end_description != -1) {
-                    description = currentPart.sliced(start_description, end_description - start_description);
-                    description = description.replace("<![CDATA[","").replace("\"","").replace("]]>",""); // upd: figure out how to clean up the copy-paste
-                }
-
-                if (start_link != -1 && end_link != -1) {
-                    link = currentPart.sliced(start_link, end_link - start_link);
-                }
-
                 if (start_date != -1 && end_date != -1) {
                     date = currentPart.sliced(start_date, end_date - start_date);
                 }
 
+                int start_category   = currentPart.indexOf("<category>") + 10;
+                int end_category   = currentPart.indexOf("</category>");
                 if (start_category != -1 && end_category != -1) {
-                    category = currentPart.sliced(start_category, end_category - start_category);
+                    category = cleanHtml(currentPart.sliced(start_category , end_category  - start_category));
+                }
+
+                /* int start_image = currentPart.indexOf("<enclosure");
+                if (start_image == -1){
+                    start_image = currentPart.indexOf("<media:thumbnail");
+                } */
+                int start_urlPhoto = currentPart.indexOf("url=\"");
+                if (start_urlPhoto == -1) {
+                    start_urlPhoto = currentPart.indexOf("src=\"");
+                }
+                if (start_urlPhoto == -1) {
+                    start_urlPhoto = currentPart.indexOf("src='");
+                }
+                if (start_urlPhoto != -1) {
+                    start_urlPhoto += 5;
+                    int firstEnd = currentPart.indexOf("\"", start_urlPhoto);
+                    int secondEnd = currentPart.indexOf("'", start_urlPhoto);
+                    int end_urlPhoto = -1;
+
+                    if (firstEnd != -1 && secondEnd != -1) {
+                        if (firstEnd < secondEnd) {
+                            end_urlPhoto = firstEnd;
+                        } else {
+                            end_urlPhoto = secondEnd;
+                        }
+                    } else if (firstEnd != -1) {
+                        end_urlPhoto = firstEnd;
+                    } else {
+                        end_urlPhoto = secondEnd;
+                    }
+                    if (end_urlPhoto != -1) {
+                        imageUrl = currentPart.sliced(start_urlPhoto, end_urlPhoto - start_urlPhoto);
+                    }
                 }
 
                 imageUrl = QUrl::fromEncoded(imageUrl.toUtf8()).toString(); // to avoid any errors with data (%)
@@ -120,4 +117,27 @@ void network_access::replyFinished(QNetworkReply *reply)
     } else {
         qDebug() << "Помилка";
     }
+}
+
+QString network_access::cleanHtml(QString html) {
+    QString result = html;
+    result.replace("&quot;", "\"").replace("&apos;", "'").replace("&amp;",  "&").replace("&laquo;", "«")
+        .replace("&raquo;", "»").replace("&nbsp;",  " ").replace("&ndash;", "–").replace("&mdash;", "—")
+        .replace("&lt;",    "<").replace("&gt;",    ">").replace("Повний текст новини", "")
+        .replace("<![CDATA[", "").replace("]]>", "").replace("\"", "");
+
+    while (result.contains("<")) {
+        int start = result.indexOf("<");
+        int end = result.indexOf(">", start);
+
+        if (end != -1) {
+            result.remove(start, end - start + 1);
+        } else {
+            result.remove(start, 1);
+        }
+    }
+    while (result.contains("\n\n")) {
+        result.replace("\n\n", "\n");
+    }
+    return result;
 }
