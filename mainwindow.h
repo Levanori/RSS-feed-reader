@@ -32,6 +32,7 @@ private:
     network_access *net;
     QMultiMap<QString, QLabel*> imageMap; // link to the photo and a specific label for the photo location
     void loadSites();
-    void readAndAddToTree(QString fileName);
+    void loadTheTree(QString fileName);
+    bool addRssToTree(QString folder, QString name, QString url);
 };
 #endif // MAINWINDOW_H
