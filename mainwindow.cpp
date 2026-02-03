@@ -1,7 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QDesktopServices>
-#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -12,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent)
     this->showMaximized();
 
     net = new network_access(this);
+    rssStorage = new rss_storage(ui->treeWidgetOfRSS);
 
     connect(net, &network_access::newsSend, this, &MainWindow::newsReceived);
     connect(ui->NewsTextTable, &QTableWidget::itemDoubleClicked, this, &MainWindow::openLink);
@@ -22,11 +21,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->NewsTextTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->treeWidgetOfRSS->hideColumn(1);
 
-    loadSites();
+    rssStorage->loadSites();
 }
 
 MainWindow::~MainWindow()
 {
+    delete rssStorage;
     delete ui;
 }
 
@@ -80,47 +80,13 @@ void MainWindow::addSiteByUser() {
     QString name = ui->lineEditNameOfSite->text();
     QString url = ui->lineEditUrl->text();
 
-    if (addRssToTree(folder, name, url)) {
-        QFile fileOfSites("user_sites.txt");
-        if (fileOfSites.open(QIODevice::Append | QIODevice::Text)) {
-            fileOfSites.write(folder.toUtf8() + ";" + name.toUtf8() + ";" + url.toUtf8() + "\n");
-            fileOfSites.close();
-            // qDebug() << "Збережено";
-        }
+    if (rssStorage->addRssToTree(folder, name, url)) {
+        rssStorage->saveAllSites("user_sites.txt");
+        // qDebug() << "Збережено";
 
         ui->lineEditFolder->clear();
         ui->lineEditNameOfSite->clear();
         ui->lineEditUrl->clear();
-    }
-}
-
-void MainWindow::loadSites() {
-    loadTheTree(":/configs/default_sites.txt");
-    loadTheTree("user_sites.txt");
-}
-
-void MainWindow::loadTheTree(QString fileName) {
-    QFile file(fileName);
-    if (file.open(QIODevice::ReadOnly)) {
-        QByteArray data = file.readAll();
-        file.close();
-
-        QString readableData = QString::fromUtf8(data);
-        QStringList listOfItemsForTree = readableData.split('\n');
-
-        for (int index = 0; index < listOfItemsForTree.size(); index++) {
-            QString itemForTree = listOfItemsForTree[index].replace("\r", "");
-            if (itemForTree.size() > 1) {
-                QStringList endListOfItemsForTree = itemForTree.split(';');
-
-                if (endListOfItemsForTree.size() == 3) {
-                    addRssToTree(endListOfItemsForTree[0], endListOfItemsForTree[1], endListOfItemsForTree[2]);
-                }
-                else if (endListOfItemsForTree.size() == 2) {
-                    addRssToTree("", endListOfItemsForTree[0], endListOfItemsForTree[1]);
-                }
-            }
-        }
     }
 }
 
@@ -139,54 +105,4 @@ void MainWindow::treeRSSClicked(QTreeWidgetItem *item) {
     else {
         net->getDataFromInternet(url);
     }
-}
-
-bool MainWindow::addRssToTree(QString folder, QString name, QString url) {
-    if (name.isEmpty() || url.isEmpty()) {
-        return 0;
-    }
-
-    for (int indexOfItem = 0; indexOfItem < ui->treeWidgetOfRSS->topLevelItemCount(); indexOfItem++) { // rss name and link identity check
-        QTreeWidgetItem *topItem = ui->treeWidgetOfRSS->topLevelItem(indexOfItem);
-        bool errorDuplicate = 0;
-
-        if (topItem->text(1) == url || topItem->text(0) == name) {
-            errorDuplicate = 1;
-        }
-        for (int indexItemInFolder = 0; indexItemInFolder < topItem->childCount(); indexItemInFolder++) {
-            if (topItem->child(indexItemInFolder)->text(1) == url || topItem->child(indexItemInFolder)->text(0) == name) {
-                errorDuplicate = 1;
-            }
-        }
-        if (errorDuplicate) {
-            QMessageBox::warning(this, "Warning!", "Виявлено дублювання назви чи RSS стрічки");
-            return 0;
-        }
-    }
-
-    if (folder.size() > 0) {
-        QTreeWidgetItem *foundFolder = 0;
-
-        for (int index = 0; index < ui->treeWidgetOfRSS->topLevelItemCount(); index++) {
-            if (ui->treeWidgetOfRSS->topLevelItem(index)->text(0) == folder) {
-                foundFolder = ui->treeWidgetOfRSS->topLevelItem(index);
-                break;
-            }
-        }
-
-        if (foundFolder == 0) {
-            foundFolder = new QTreeWidgetItem(ui->treeWidgetOfRSS);
-            foundFolder->setText(0, folder);
-
-        }
-        QTreeWidgetItem *siteItem = new QTreeWidgetItem(foundFolder);
-        siteItem->setText(0, name);
-        siteItem->setText(1, url);
-    }
-    else {
-        QTreeWidgetItem *siteItem = new QTreeWidgetItem(ui->treeWidgetOfRSS);
-        siteItem->setText(0, name);
-        siteItem->setText(1, url);
-    }
-    return 1;
 }

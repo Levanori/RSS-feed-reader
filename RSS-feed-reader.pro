@@ -11,11 +11,13 @@ CONFIG += c++17
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    network_access.cpp
+    network_access.cpp \
+    rss_storage.cpp
 
 HEADERS += \
     mainwindow.h \
-    network_access.h
+    network_access.h \
+    rss_storage.h
 
 FORMS += \
     mainwindow.ui

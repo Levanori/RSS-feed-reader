@@ -3,10 +3,10 @@
 
 #include <QMainWindow>
 #include <QTableWidgetItem>
-#include "network_access.h"
 #include <QLabel>
-#include <QTreeWidgetItem>
-#include <QFile>
+#include <QDesktopServices>
+#include "network_access.h"
+#include "rss_storage.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -30,9 +30,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     network_access *net;
+    rss_storage *rssStorage;
     QMultiMap<QString, QLabel*> imageMap; // link to the photo and a specific label for the photo location
-    void loadSites();
-    void loadTheTree(QString fileName);
-    bool addRssToTree(QString folder, QString name, QString url);
 };
 #endif // MAINWINDOW_H
