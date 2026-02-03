@@ -50,6 +50,8 @@ void MainWindow::newsReceived(QString category, QString title, QString date, QSt
         imageMap.insert(imageUrl, imageLabel);
         net->getDataFromInternet(imageUrl);
     }
+
+    ui->NewsTextTable->sortItems(0, Qt::DescendingOrder); // sort by time excluding GMT
 }
 
 void MainWindow::openLink(QTableWidgetItem *item)
@@ -80,7 +82,7 @@ void MainWindow::addSiteByUser() {
 
     if (addRssToTree(folder, name, url)) {
         QFile fileOfSites("user_sites.txt");
-        if (fileOfSites.open(QIODevice::Append | QIODevice::Text)) { // opportuniry to continue writing text
+        if (fileOfSites.open(QIODevice::Append | QIODevice::Text)) {
             fileOfSites.write(folder.toUtf8() + ";" + name.toUtf8() + ";" + url.toUtf8() + "\n");
             fileOfSites.close();
             // qDebug() << "Збережено";
@@ -124,14 +126,19 @@ void MainWindow::loadTheTree(QString fileName) {
 
 void MainWindow::treeRSSClicked(QTreeWidgetItem *item) {
     QString url = item->text(1);
+    ui->NewsTextTable->setRowCount(0);
 
     if (url.isEmpty()) { // folder
-        return;
+        for (int indexItemInFolder = 0; indexItemInFolder < item->childCount(); indexItemInFolder++) {
+            QString childUrl = item->child(indexItemInFolder)->text(1);
+            if (!childUrl.isEmpty()) {
+                net->getDataFromInternet(childUrl);
+            }
+        }
     }
-
-    ui->NewsTextTable->setRowCount(0);
-    imageMap.clear();
-    net->getDataFromInternet(url);
+    else {
+        net->getDataFromInternet(url);
+    }
 }
 
 bool MainWindow::addRssToTree(QString folder, QString name, QString url) {
