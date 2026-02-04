@@ -25,7 +25,7 @@ void network_access::replyFinished(QNetworkReply *reply)
         }
         else {
             QString readable_data = QString::fromUtf8(data);
-            qDebug() << "Дані є:" << readable_data;
+            // qDebug() << "Дані є:" << readable_data;
 
             QStringList parts = readable_data.split("<item>");
 
@@ -106,12 +106,12 @@ void network_access::replyFinished(QNetworkReply *reply)
 
                 imageUrl = QUrl::fromEncoded(imageUrl.toUtf8()).toString(); // to avoid any errors with data (%)
                 emit newsSend(category, title, date, description, link, imageUrl);
-                qDebug() << "Категорія:" << category;
+                /* qDebug() << "Категорія:" << category;
                 qDebug() << "Заголовок:" << title;
                 qDebug() << "Дата:     " << date;
                 qDebug() << "Опис:     " << description;
                 qDebug() << "Фото:     " << imageUrl;
-                qDebug() << "Лінк:     " << link;
+                qDebug() << "Лінк:     " << link; */
             }
         }
     } else {

@@ -5,6 +5,7 @@
 #include <QTableWidgetItem>
 #include <QLabel>
 #include <QDesktopServices>
+#include <QTimer>
 #include "network_access.h"
 #include "rss_storage.h"
 
@@ -28,10 +29,14 @@ private slots:
     void addSiteByUser();
     void treeRSSClicked(QTreeWidgetItem *item);
     void deleteSiteByUser();
+    void refreshCurrentSelection();
+    void timerConfigChanged();
 private:
     Ui::MainWindow *ui;
     network_access *net;
     rss_storage *rssStorage;
+    QTimer *feedTimer;
     QMultiMap<QString, QLabel*> imageMap; // link to the photo and a specific label for the photo location
+    void refreshAllFeeds();
 };
 #endif // MAINWINDOW_H

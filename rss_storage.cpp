@@ -94,6 +94,10 @@ void rss_storage::saveAllSites(QString fileName) {
         for (int indexItem = 0; indexItem < rssTree->topLevelItemCount(); indexItem++) {
             QTreeWidgetItem *item = rssTree->topLevelItem(indexItem);
 
+            if (item->text(1) == "all_news") {
+                continue;
+            }
+
             if (item->childCount() > 0) {
                 for (int indexItemInFolder = 0; indexItemInFolder < item->childCount(); indexItemInFolder++) {
                     QString folder = item->text(0);
