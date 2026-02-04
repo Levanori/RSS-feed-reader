@@ -38,5 +38,6 @@ private:
     QTimer *feedTimer;
     QMultiMap<QString, QLabel*> imageMap; // link to the photo and a specific label for the photo location
     void refreshAllFeeds();
+    void updateItem(QTreeWidgetItem *item);
 };
 #endif // MAINWINDOW_H

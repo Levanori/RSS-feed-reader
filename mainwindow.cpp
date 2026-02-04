@@ -115,25 +115,8 @@ void MainWindow::addSiteByUser() {
 }
 
 void MainWindow::treeRSSClicked(QTreeWidgetItem *item) {
-    if (item->text(1) == "all_news") {
-        ui->NewsTextTable->setRowCount(0);
-        refreshCurrentSelection();
-        return;
-    }
-    QString url = item->text(1);
     ui->NewsTextTable->setRowCount(0);
-
-    if (url.isEmpty()) { // folder
-        for (int indexItemInFolder = 0; indexItemInFolder < item->childCount(); indexItemInFolder++) {
-            QString childUrl = item->child(indexItemInFolder)->text(1);
-            if (!childUrl.isEmpty()) {
-                net->getDataFromInternet(childUrl);
-            }
-        }
-    }
-    else {
-        net->getDataFromInternet(url);
-    }
+    updateItem(item);
 }
 
 void MainWindow::deleteSiteByUser() {
@@ -175,51 +158,18 @@ void MainWindow::deleteSiteByUser() {
     ui->NewsTextTable->setRowCount(0);
 }
 
-void MainWindow::refreshAllFeeds()
-{
+void MainWindow::refreshAllFeeds(){
     for (int indexOfItem = 0; indexOfItem < ui->treeWidgetOfRSS->topLevelItemCount(); indexOfItem++) {
         QTreeWidgetItem *topItem = ui->treeWidgetOfRSS->topLevelItem(indexOfItem);
 
-        if (topItem->text(1) == "all_news") {
-            continue;
-        }
-
-        if (topItem->childCount() > 0) {
-            for (int indexItemInFolder = 0; indexItemInFolder < topItem->childCount(); indexItemInFolder++) {
-                QString url = topItem->child(indexItemInFolder)->text(1);
-                if (!url.isEmpty()) {
-                    qDebug() << "Оновлюється сайт із папки:" << topItem->child(indexItemInFolder)->text(0);
-                    net->getDataFromInternet(url);
-                }
-            }
-        }
-        else if (!topItem->text(1).isEmpty()) {
-            qDebug() << "Оновлюється одиночний сайт:" << topItem->text(0);
-            net->getDataFromInternet(topItem->text(1));
+        if (topItem->text(1) != "all_news") {
+            updateItem(topItem);
         }
     }
 }
 
 void MainWindow::refreshCurrentSelection() {
-    QTreeWidgetItem *currentItem = ui->treeWidgetOfRSS->currentItem();
-    QString url = currentItem->text(1);
-
-    if (url == "all_news") {
-        refreshAllFeeds();
-    }
-    else if (url.isEmpty()) {
-        for (int indexItemInFolder = 0; indexItemInFolder < currentItem->childCount(); indexItemInFolder++) {
-            QString childUrl = currentItem->child(indexItemInFolder)->text(1);
-            if (!childUrl.isEmpty()) {
-                qDebug() << "Оновлюється сайт із папки:" << currentItem->child(indexItemInFolder)->text(0);
-                net->getDataFromInternet(childUrl);
-            }
-        }
-    }
-    else {
-        qDebug() << "Оновлюється одиночний сайт:" << currentItem->text(0);
-        net->getDataFromInternet(url);
-    }
+    updateItem(ui->treeWidgetOfRSS->currentItem());
 }
 
 void MainWindow::timerConfigChanged() {
@@ -232,6 +182,21 @@ void MainWindow::timerConfigChanged() {
     }
     else {
         qDebug() << "Таймер зупинено";
+    }
+}
+
+void MainWindow::updateItem(QTreeWidgetItem *item) {
+    QString url = item->text(1);
+
+    if (url == "all_news") {
+        refreshAllFeeds();
+    } else if (url.isEmpty()) {
+        for (int indexItemInFolder = 0; indexItemInFolder < item->childCount(); indexItemInFolder++) {
+            updateItem(item->child(indexItemInFolder));
+        }
+    } else {
+        qDebug() << "Оновлюється сайт:" << item->text(0);
+        net->getDataFromInternet(url);
     }
 }
 
