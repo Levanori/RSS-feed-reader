@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->pushButtonDeleteRSS, &QPushButton::clicked, this, &MainWindow::deleteSiteByUser);
     connect(feedTimer, &QTimer::timeout, this, &MainWindow::refreshCurrentSelection);
     connect(ui->boxForTimer, &QComboBox::currentIndexChanged, this, &MainWindow::timerConfigChanged);
+    connect(ui->lineEditFindNews, &QLineEdit::textChanged, this, &MainWindow::searchNews);
 
     ui->NewsTextTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->treeWidgetOfRSS->hideColumn(1);
@@ -67,6 +68,7 @@ void MainWindow::newsReceived(QString category, QString title, QString date, QSt
     }
 
     ui->NewsTextTable->sortItems(0, Qt::DescendingOrder); // sort by time excluding GMT
+    searchNews(ui->lineEditFindNews->text());
 }
 
 void MainWindow::openLink(QTableWidgetItem *item)
@@ -114,11 +116,6 @@ void MainWindow::addSiteByUser() {
     }
 }
 
-void MainWindow::treeRSSClicked(QTreeWidgetItem *item) {
-    ui->NewsTextTable->setRowCount(0);
-    updateItem(item);
-}
-
 void MainWindow::deleteSiteByUser() {
     QString folder = ui->lineEditFolder->text();
     QString name = ui->lineEditNameOfSite->text();
@@ -157,6 +154,12 @@ void MainWindow::deleteSiteByUser() {
     ui->lineEditUrl->clear();
     ui->NewsTextTable->setRowCount(0);
 }
+
+void MainWindow::treeRSSClicked(QTreeWidgetItem *item) {
+    ui->NewsTextTable->setRowCount(0);
+    updateItem(item);
+}
+
 
 void MainWindow::refreshAllFeeds(){
     for (int indexOfItem = 0; indexOfItem < ui->treeWidgetOfRSS->topLevelItemCount(); indexOfItem++) {
@@ -200,4 +203,38 @@ void MainWindow::updateItem(QTreeWidgetItem *item) {
     }
 }
 
+void MainWindow::searchNews(QString text) {
+    if (text.trimmed().isEmpty()) {
+        for (int i = 0; i < ui->NewsTextTable->rowCount(); i++)
+            ui->NewsTextTable->setRowHidden(i, false);
+        return;
+    }
+    QString filter = " " + text.toLower().trimmed() + " ";
+    for (int row = 0; row < ui->NewsTextTable->rowCount(); row++) {
+        bool match = false;
 
+        for (int column = 1; column <= 3; column++) {
+            QTableWidgetItem *item = ui->NewsTextTable->item(row, column);
+                if (item != nullptr) { // to avoid crashes if some information is not processed
+                    QString cellText = item->text().toLower();
+                    for (int n_word = 0; n_word < cellText.length(); n_word++) {
+                        if (!cellText[n_word].isLetterOrNumber() && cellText[n_word] != ' ') {
+                            cellText[n_word] = ' ';
+                        }
+                    }
+
+                    cellText = " " + cellText + " ";
+
+                    if (cellText.contains(filter)) {
+                        match = true;
+                        break;
+                    }
+                }
+        }
+        if (match == true) {
+            ui->NewsTextTable->setRowHidden(row, false);
+        } else {
+            ui->NewsTextTable->setRowHidden(row, true);
+        }
+    }
+}

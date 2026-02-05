@@ -27,10 +27,11 @@ private slots:
     void openLink(QTableWidgetItem *item);
     void imagePlace(QByteArray data, QString url);
     void addSiteByUser();
-    void treeRSSClicked(QTreeWidgetItem *item);
     void deleteSiteByUser();
+    void treeRSSClicked(QTreeWidgetItem *item);
     void refreshCurrentSelection();
     void timerConfigChanged();
+    void searchNews(QString text);
 private:
     Ui::MainWindow *ui;
     network_access *net;
