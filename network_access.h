@@ -4,6 +4,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QObject>
+#include <QDateTime>
 
 using namespace std;
 
@@ -13,6 +14,7 @@ class network_access : public QObject
 public:
     explicit network_access(QObject *parent = nullptr);
     void getDataFromInternet(QString url);
+    void stopAll();
 private slots:
     void replyFinished(QNetworkReply *reply);
 private:

@@ -65,6 +65,27 @@ void network_access::replyFinished(QNetworkReply *reply)
                     date = currentPart.sliced(start_date, end_date - start_date);
                 }
 
+                QDateTime modificatedDate;
+                modificatedDate = QDateTime::fromString(date, Qt::RFC2822Date);
+                if (!modificatedDate.isValid()) {
+                    modificatedDate = QDateTime::fromString(date, Qt::ISODate);
+                }
+                if (!modificatedDate.isValid()) {
+                    QStringList formats = { "ddd, d MMM yyyy hh:mm:ss GMT",
+                                           "ddd, d MMM yyyy hh:mm:ss +zzzz",
+                                           "ddd, dd MMM yyyy hh:mm:ss t"};
+
+                    for (int indexOfFormat = 0; indexOfFormat < formats.size(); indexOfFormat++) {
+                        modificatedDate = QDateTime::fromString(date, formats[indexOfFormat]);
+                        if (modificatedDate.isValid()) {
+                            break;
+                        }
+                    }
+                }
+                if (modificatedDate.isValid()) {
+                    date = modificatedDate.toLocalTime().toString("yyyy.MM.dd hh:mm");
+                }
+
                 int start_category   = currentPart.indexOf("<category>") + 10;
                 int end_category   = currentPart.indexOf("</category>");
                 if (start_category != -1 && end_category != -1) {
@@ -105,6 +126,7 @@ void network_access::replyFinished(QNetworkReply *reply)
                 }
 
                 imageUrl = QUrl::fromEncoded(imageUrl.toUtf8()).toString(); // to avoid any errors with data (%)
+
                 emit newsSend(category, title, date, description, link, imageUrl);
                 /* qDebug() << "Категорія:" << category;
                 qDebug() << "Заголовок:" << title;
@@ -115,7 +137,7 @@ void network_access::replyFinished(QNetworkReply *reply)
             }
         }
     } else {
-        qDebug() << "Помилка";
+        // qDebug() << "Помилка";
     }
 }
 
@@ -140,4 +162,13 @@ QString network_access::cleanHtml(QString html) {
         result.replace("\n\n", "\n");
     }
     return result;
+}
+
+void network_access::stopAll() { // cleaning up queries with rapid multiple clicks
+    if (manager) {
+        manager->deleteLater();
+    }
+    manager = new QNetworkAccessManager(this);
+
+    connect(manager, &QNetworkAccessManager::finished, this, &network_access::replyFinished);
 }

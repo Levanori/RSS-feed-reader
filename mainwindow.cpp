@@ -156,10 +156,11 @@ void MainWindow::deleteSiteByUser() {
 }
 
 void MainWindow::treeRSSClicked(QTreeWidgetItem *item) {
+    net->stopAll();
+    imageMap.clear();
     ui->NewsTextTable->setRowCount(0);
     updateItem(item);
 }
-
 
 void MainWindow::refreshAllFeeds(){
     for (int indexOfItem = 0; indexOfItem < ui->treeWidgetOfRSS->topLevelItemCount(); indexOfItem++) {
@@ -181,10 +182,10 @@ void MainWindow::timerConfigChanged() {
     int interval = ui->boxForTimer->currentData().toInt();
     if (interval > 0) {
         feedTimer->start(interval);
-        qDebug() << "Таймер успішно запущено на" << interval/60000 << "хв";
+        // qDebug() << "Таймер успішно запущено на" << interval/60000 << "хв";
     }
     else {
-        qDebug() << "Таймер зупинено";
+        // qDebug() << "Таймер зупинено";
     }
 }
 
@@ -198,17 +199,12 @@ void MainWindow::updateItem(QTreeWidgetItem *item) {
             updateItem(item->child(indexItemInFolder));
         }
     } else {
-        qDebug() << "Оновлюється сайт:" << item->text(0);
+        // qDebug() << "Оновлюється сайт:" << item->text(0);
         net->getDataFromInternet(url);
     }
 }
 
 void MainWindow::searchNews(QString text) {
-    if (text.trimmed().isEmpty()) {
-        for (int i = 0; i < ui->NewsTextTable->rowCount(); i++)
-            ui->NewsTextTable->setRowHidden(i, false);
-        return;
-    }
     QString filter = " " + text.toLower().trimmed() + " ";
     for (int row = 0; row < ui->NewsTextTable->rowCount(); row++) {
         bool match = false;
