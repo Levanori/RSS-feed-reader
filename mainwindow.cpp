@@ -6,6 +6,8 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    setWindowTitle("RSS Reader Corvus");
+    setWindowIcon(QIcon(":/configs/corvus.png"));
     this->setMinimumSize(960, 313);
     this->showMaximized();
 

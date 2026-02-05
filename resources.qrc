@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>configs/default_sites.txt</file>
+        <file>configs/corvus.png</file>
     </qresource>
 </RCC>
